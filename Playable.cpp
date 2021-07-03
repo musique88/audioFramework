@@ -28,4 +28,10 @@ namespace MSQ
         return _outputChannels;
     }
 
+    void Playable::EmptyBuffer()
+    {
+        int totalIndexes = _outputChannels * _bufferSize;
+        for (int i = 0 ; i < totalIndexes; i++)
+            _buffer[i] = 0;
+    }
 }

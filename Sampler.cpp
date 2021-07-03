@@ -6,6 +6,8 @@ namespace MSQ
     Sampler::Sampler(int maxBufferSize, int outputChannels)
     :Playable(maxBufferSize, outputChannels)
     {
+        _isDone = false;
+        _speed = 1.f;
         _sample = nullptr;
         _position = 0;
     }
@@ -29,6 +31,7 @@ namespace MSQ
 
     void Sampler::SetPosition(const int& p)
     {
+        _isDone = p > _sample->GetLength();
         _position = p;
     }
 
@@ -44,22 +47,34 @@ namespace MSQ
 
     const bool Sampler::IsDone() const
     {
-        return _position > _sample->GetLength();
+        return _isDone;
     }
 
 
     // TODO
     void Sampler::Play(int samples)
     {
-        if(samples > _bufferSize)
+        if(samples > _bufferSize || _isDone)
             return;
         
         const std::vector<int>& sampleArray = _sample->GetArray();
         int positionInArray = _position * _outputChannels;
+        int remainingSamples = samples;
+        if (_sample->GetLength() < samples + _position)
+        {
+            EmptyBuffer();
+            remainingSamples = _sample->GetLength() - _position;
+            _isDone = true;
+        }
 
-        int indexEndOfSampleArray = samples*_outputChannels;
-        for(int i = 0; i < indexEndOfSampleArray; i++)
-            _buffer[i] = sampleArray[i + positionInArray];
-        _position += samples;
+        for(int i = 0; i < remainingSamples; i++)
+            for(int j = 0; j < _outputChannels; j++)
+                _buffer[i * _outputChannels + j] = sampleArray[((int)(_speed * i) * _outputChannels) + positionInArray + j];
+        _position += samples * _speed;
+    }
+
+    void Sampler::SetSpeed(float s)
+    {
+        _speed = s;
     }
 }

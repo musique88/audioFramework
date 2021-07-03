@@ -16,9 +16,12 @@ namespace MSQ
         void Reset();
         const bool IsDone() const;
         void Play(int samples) override;
+        void SetSpeed(float _speed);
 
     protected:
         const Sample* _sample;
         int _position;
+        float _speed;
+        bool _isDone;
     };
 }

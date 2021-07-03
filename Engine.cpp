@@ -112,6 +112,11 @@ namespace MSQ
     {
         Pa_StartStream(_stream);
     }
+    
+    void Engine::StopStream()
+    {
+        Pa_StopStream(_stream);
+    }
 
     void Engine::AddInstrument(Playable* p)
     {

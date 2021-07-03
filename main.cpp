@@ -2,26 +2,26 @@
 #include "Sample.hpp"
 #include "Sampler.hpp"
 #include "Engine.hpp"
+#include <iostream>
+#include <sstream>
 
 int main()
 {
     MSQ::Log::instance()->SetFlags(MSQ::Log::LOG_ALL);
     MSQ::Sample s("song.flac");
     MSQ::Sampler sp(1024*2, s.GetChannels());
+    std::cout << s.GetLength();
     sp.SetSample(&s);
-    MSQ::Sampler sp2(1024*2, s.GetChannels());
-    sp2.SetSample(&s);
-    sp2.SetPosition(100000);
+    sp.SetSpeed(1.f);
+    sp.SetPosition(8000000);
     static MSQ::Engine* engine = MSQ::Engine::Instance();
     engine->LogDevices();
     engine->AddInstrument(&sp);
-    engine->AddInstrument(&sp2);
-    engine->OpenStream(-1,10,2,48000,1024);
+    engine->OpenStream(-1,12,2,48000,1024);
     engine->StartStream();
-
-    engine->Hang(10);
-    sp.SetPosition(200000);
+    int ss;
+    std::cin >> ss;
     MSQ::Log::instance()->Info("10 seconds has passed");
-    engine->Hang(10);
+    engine->StopStream();
     return 0;
 }

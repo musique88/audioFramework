@@ -24,6 +24,7 @@ namespace MSQ
         void LogDevices() const;
         void OpenStream(int inIndex, int outIndex, int outChannels = 2, int sampleRate = 44100, int bufferLength = 512);
         void StartStream();
+        void StopStream();
         void Hang(int seconds);
         void AddInstrument(Playable* p);
     };
