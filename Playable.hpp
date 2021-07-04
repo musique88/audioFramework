@@ -9,6 +9,7 @@ namespace MSQ
         int _bufferSize;
         int _lastSamplesBufferPlay;
         int _outputChannels;
+        bool _active;
     public:
         Playable(int bufferSize, int outputChannels);
         virtual ~Playable();
@@ -17,5 +18,6 @@ namespace MSQ
         const int* const & GetBuffer() const;
         const int& GetBufferSize() const;
         const int& GetOutputChannels() const;
+        const bool& GetActive() const;
     };
 }

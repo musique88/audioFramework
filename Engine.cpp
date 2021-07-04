@@ -98,9 +98,12 @@ namespace MSQ
             out[i] = 0;
         for(Playable* p : engine->_instruments)
         {
-            p->Play(framesPerBuffer);
-            for (int i = 0; i < framesToFill; i ++)
-                out[i] += p->GetBuffer()[i]/2;
+            if (p->GetActive())
+            {
+                p->Play(framesPerBuffer);
+                for (int i = 0; i < framesToFill; i ++)
+                    out[i] += p->GetBuffer()[i]/2;
+            }
         }
 
         for(int i = 0; i < framesToFill; i++)
