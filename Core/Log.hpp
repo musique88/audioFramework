@@ -6,7 +6,7 @@ namespace MSQ
 	class Log
 	{
 	public:
-		static Log* instance();
+		static Log* Instance();
 		enum Flags { 
 			LOG_INFO = 0b01,
 			LOG_WARN = 0b010,

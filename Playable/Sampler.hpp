@@ -1,13 +1,13 @@
 #pragma once
-#include "Sample.hpp"
-#include "Playable.hpp"
+#include "../Core/Sample.hpp"
+#include "../Playable/Playable.hpp"
 
 namespace MSQ
 {
 	class Sampler : public Playable
 	{
 	public:
-		Sampler(int maxBufferSize, int outputChannels);
+		Sampler(int outputChannels);
 		const bool IsEmpty() const;
 		void SetSample(Sample* s);
 		const Sample& GetSample() const;

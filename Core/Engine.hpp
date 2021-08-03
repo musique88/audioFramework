@@ -1,8 +1,9 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "Playable.hpp"
+#include "../Playable/Playable.hpp"
 #include <portaudio.h>
+#include <sndfile.h>
 
 namespace MSQ
 {
@@ -19,13 +20,19 @@ namespace MSQ
 		Engine();
 		~Engine();
 		int _outputChannels;
+		int _bufferSize;
+		std::vector<int> _sampleData;
+		int _writeHead;
 	public:
 		static Engine* Instance();
+		void SetBufferSize(int bufferSize);
 		void LogDevices() const;
 		void OpenStream(int inIndex, int outIndex, int outChannels = 2, int sampleRate = 44100, int bufferLength = 512);
 		void StartStream();
 		void StopStream();
+		int GetBufferSize();
 		void Hang(int seconds);
+		void Hang();
 		void AddInstrument(Playable* p);
 	};
 }

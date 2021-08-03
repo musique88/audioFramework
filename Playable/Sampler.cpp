@@ -3,8 +3,8 @@
 
 namespace MSQ
 {
-	Sampler::Sampler(int maxBufferSize, int outputChannels)
-	:Playable(maxBufferSize, outputChannels)
+	Sampler::Sampler(int outputChannels)
+	:Playable(outputChannels)
 	{
 		_speed = 1.f;
 		_sample = nullptr;
@@ -47,7 +47,6 @@ namespace MSQ
 		_position = 0;
 	}
 
-	// TODO
 	void Sampler::Play(int samples)
 	{
 		if(samples > _bufferSize)

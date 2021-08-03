@@ -1,5 +1,6 @@
 #include "Engine.hpp"
 #include <sstream>
+#include <iostream>
 #include "Log.hpp"
 
 namespace MSQ
@@ -8,7 +9,21 @@ namespace MSQ
 
 	Engine::Engine()
 	{
-		Pa_Initialize();
+		int err = Pa_Initialize();
+		if (err != paNoError)
+			Log::Instance()->Err(Pa_GetErrorText(err));
+		_bufferSize = 512;
+		_sampleData.resize(44100);
+	}
+
+	void Engine::SetBufferSize(int size)
+	{
+		_bufferSize = size;
+	}
+
+	int Engine::GetBufferSize()
+	{
+		return _bufferSize;
 	}
 
 	Engine::~Engine()
@@ -35,7 +50,7 @@ namespace MSQ
 				"Default sample rate: " << info->defaultSampleRate << 
 				" IN: " << info->maxInputChannels << 
 				" OUT: " << info->maxOutputChannels;
-			MSQ::Log::instance()->Info(s.str());
+			MSQ::Log::Instance()->Info(s.str());
 		}
 	}
 
@@ -44,7 +59,7 @@ namespace MSQ
 	{
 		PaStreamParameters inR;
 		PaStreamParameters* in = &inR;
-		if (inIndex >= 0)
+		if (inIndex > 0)
 		{
 			const PaDeviceInfo *inDeviceInfo = Pa_GetDeviceInfo(inIndex);
 			in->channelCount = inDeviceInfo->maxOutputChannels;
@@ -57,7 +72,7 @@ namespace MSQ
 			in = nullptr;
 		PaStreamParameters outR;
 		PaStreamParameters* out = &outR;
-		if (outIndex >= 0)
+		if (outIndex > 0)
 		{
 			const PaDeviceInfo *outDeviceInfo = Pa_GetDeviceInfo(outIndex);
 			out->channelCount = outChannels;
@@ -73,16 +88,18 @@ namespace MSQ
 		s << "Opening stream with " << Pa_GetDeviceInfo(outIndex)->name << " as output device with " << outChannels << " channels" << std::endl;
 		s << "The selected sample rate is " << sampleRate << " and the buffer size is " << bufferLength;
 
-		Log::instance()->Info(s.str());
-
-		Pa_OpenStream(  &_stream,
-						in,
-						out,
-						sampleRate,
-						bufferLength,
-						paNoFlag,
-						StreamCallback,
-						this);
+		Log::Instance()->Info(s.str());
+		_bufferSize = bufferLength;
+		int err = Pa_OpenStream(  	&_stream,
+									in,
+									out,
+									sampleRate,
+									bufferLength,
+									paNoFlag,
+									StreamCallback,
+									this);
+		if (err != paNoError)
+			Log::Instance()->Err(Pa_GetErrorText(err));
 	}
 
 	int Engine::StreamCallback(const void* inputData, void* outputBuffer,
@@ -106,19 +123,41 @@ namespace MSQ
 			}
 		}
 
-		for(int i = 0; i < framesToFill; i++)
-			out[i] /= 16;
+//		for(int i = 0; i < framesToFill; i++)
+//			out[i] /= 16;
+		for (int i = 0; i < framesToFill; i ++)
+			engine->_sampleData[(i + engine->_writeHead) % 44100] = out[i];
+		engine->_writeHead += framesToFill;
 		return paContinue;
 	}
 
 	void Engine::StartStream()
 	{
-		Pa_StartStream(_stream);
+		int err = Pa_StartStream(_stream);
+		if (err != paNoError)
+			Log::Instance()->Err(Pa_GetErrorText(err));
 	}
 	
 	void Engine::StopStream()
 	{
-		Pa_StopStream(_stream);
+		int err = Pa_StopStream(_stream);
+		if (err != paNoError)
+			Log::Instance()->Err(Pa_GetErrorText(err));
+		SF_INFO info;
+		info.format = SF_FORMAT_WAV | SF_FORMAT_PCM_32;
+		info.frames = 44100/2;
+		info.samplerate = 44100;
+		info.channels = 2;
+		info.seekable = false;
+		SNDFILE* sndfile = sf_open("debug.wav", SFM_WRITE, &info);
+		if (int err = sf_error(sndfile))
+			Log::Instance()->Err(sf_error_number(err));
+		sf_write_int(sndfile, &_sampleData[0], 44100);
+		if (int err = sf_error(sndfile))
+			Log::Instance()->Err(sf_error_number(err));
+		sf_close(sndfile);
+		if (int err = sf_error(sndfile))
+			Log::Instance()->Err(sf_error_number(err));
 	}
 
 	void Engine::AddInstrument(Playable* p)
@@ -129,5 +168,11 @@ namespace MSQ
 	void Engine::Hang(int seconds)
 	{
 		Pa_Sleep(seconds*1000);
+	}
+
+	void Engine::Hang()
+	{
+		char a;
+		std::cin >> a;
 	}
 }

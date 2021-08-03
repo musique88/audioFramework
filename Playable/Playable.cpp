@@ -1,12 +1,14 @@
 #include "Playable.hpp"
+#include "../Core/Engine.hpp"
 
 namespace MSQ
 {
-	Playable::Playable(int bufferSize, int outputChannels)
-	: _bufferSize(bufferSize), _outputChannels(outputChannels)
+	Playable::Playable(int outputChannels)
 	{
-		_active = false;
-		_buffer = new int[bufferSize * outputChannels];
+		_bufferSize = Engine::Instance()->GetBufferSize();
+		_outputChannels = outputChannels;
+		_active = true;
+		_buffer = new int[_bufferSize * outputChannels];
 	}
 
 	Playable::~Playable()

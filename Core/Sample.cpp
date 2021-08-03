@@ -34,11 +34,11 @@ namespace MSQ
 		struct SF_INFO info;
 		SNDFILE* file = sf_open(fileName, SFM_READ, &info);
 		if(int i = sf_error(file))
-			Log::instance()->Err(sf_error_number(i));
+			Log::Instance()->Err(sf_error_number(i));
 		int* arr = new int[info.frames * info.channels]; 
 		sf_count_t size = sf_read_int(file, arr, info.frames * info.channels);
 		if(int i = sf_error(file))
-			Log::instance()->Err(sf_error_number(i));
+			Log::Instance()->Err(sf_error_number(i));
 		_channels = info.channels;
 		_buffer = std::vector<int>(arr, arr + size);
 		sf_close(file);

@@ -7,7 +7,7 @@ namespace MSQ
 	time_t rawTime;
 	struct tm* timeInfo;
 	Log* Log::_instance = nullptr;
-	Log* Log::instance()
+	Log* Log::Instance()
 	{
 		if (_instance == nullptr)
 			_instance = new Log();
@@ -66,7 +66,7 @@ namespace MSQ
 		_file.open(f);
 
 		if (_file.bad())
-			instance()->Err("Bad file");
+			Instance()->Err("Bad file");
 		else
 		{
 			time(&rawTime);

@@ -7,11 +7,10 @@ namespace MSQ
 	protected:
 		int* _buffer;
 		int _bufferSize;
-		int _lastSamplesBufferPlay;
 		int _outputChannels;
 		bool _active;
 	public:
-		Playable(int bufferSize, int outputChannels);
+		Playable(int outputChannels);
 		virtual ~Playable();
 		virtual void Play(int samples) = 0;
 		void EmptyBuffer();
