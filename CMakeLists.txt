@@ -6,10 +6,10 @@ set(CMAKE_CONFIGURATION_TYPES "Debug" CACHE STRING "" FORCE)
 
 project(AudioFramework)
 
-link_libraries(sndfile portaudio)
+link_libraries(sndfile portaudio glfw GLEW GL imgui)
 
 add_executable(	AudioFramework 
-				main.cpp 
+				mainUi.cpp 
 				Core/Engine.cpp 
 				Core/Log.cpp
 				Core/Sample.cpp
@@ -18,10 +18,12 @@ add_executable(	AudioFramework
 				Playable/Instruments/Instrument.cpp
 				Playable/Instruments/Envelope.cpp
 				Playable/Instruments/GranularSynth.cpp
+				Playable/Instruments/InstrumentsUtils.cpp
+				Req/imgui_impl_opengl3.cpp
+				Req/imgui_impl_glfw.cpp
 				)
-
-
-target_include_directories(AudioFramework PUBLIC "${PROJECT_BINARY_DIR}")
+set(CMAKE_EXE_LINKER_FLAGS "-rdynamic")
+target_include_directories(AudioFramework PUBLIC "${PROJECT_BINARY_DIR}" )
 
 add_custom_command(TARGET AudioFramework PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink

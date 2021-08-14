@@ -13,4 +13,5 @@ namespace MSQ
 		virtual void NoteOff(unsigned char note, unsigned char vel) = 0;
 		Instrument(int channels);
 	};
+
 }

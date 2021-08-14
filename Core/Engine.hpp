@@ -19,9 +19,10 @@ namespace MSQ
 		std::vector<Playable*> _instruments;
 		Engine();
 		~Engine();
+		int _sampleRate;
 		int _outputChannels;
 		int _bufferSize;
-		std::vector<int> _sampleData;
+		std::vector<int>* _sampleData;
 		int _writeHead;
 	public:
 		static Engine* Instance();
@@ -30,7 +31,8 @@ namespace MSQ
 		void OpenStream(int inIndex, int outIndex, int outChannels = 2, int sampleRate = 44100, int bufferLength = 512);
 		void StartStream();
 		void StopStream();
-		int GetBufferSize();
+		const int GetSampleRate() const;
+		const int GetBufferSize() const;
 		void Hang(int seconds);
 		void Hang();
 		void AddInstrument(Playable* p);

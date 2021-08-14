@@ -1,0 +1,8 @@
+.vscode
+*.out
+log.txt
+*.flac
+Res
+.idea
+cmake-build-debug
+bin/*

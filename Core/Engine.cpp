@@ -3,6 +3,8 @@
 #include <iostream>
 #include "Log.hpp"
 
+#define DEBUG_SECONDS 10
+
 namespace MSQ
 {
 	Engine* Engine::_instance = nullptr;
@@ -13,7 +15,7 @@ namespace MSQ
 		if (err != paNoError)
 			Log::Instance()->Err(Pa_GetErrorText(err));
 		_bufferSize = 512;
-		_sampleData.resize(44100);
+		_sampleRate = 0;
 	}
 
 	void Engine::SetBufferSize(int size)
@@ -21,9 +23,14 @@ namespace MSQ
 		_bufferSize = size;
 	}
 
-	int Engine::GetBufferSize()
+	const int Engine::GetBufferSize() const
 	{
 		return _bufferSize;
+	}
+
+	const int Engine::GetSampleRate() const 
+	{
+		return _sampleRate;
 	}
 
 	Engine::~Engine()
@@ -57,6 +64,7 @@ namespace MSQ
 
 	void Engine::OpenStream(int inIndex, int outIndex, int outChannels, int sampleRate, int bufferLength)
 	{
+		_sampleRate = sampleRate;
 		PaStreamParameters inR;
 		PaStreamParameters* in = &inR;
 		if (inIndex > 0)
@@ -100,6 +108,8 @@ namespace MSQ
 									this);
 		if (err != paNoError)
 			Log::Instance()->Err(Pa_GetErrorText(err));
+
+		_sampleData = new std::vector<int>(sampleRate * DEBUG_SECONDS * outChannels);
 	}
 
 	int Engine::StreamCallback(const void* inputData, void* outputBuffer,
@@ -119,14 +129,14 @@ namespace MSQ
 			{
 				p->Play(framesPerBuffer);
 				for (int i = 0; i < framesToFill; i ++)
-					out[i] += p->GetBuffer()[i]/2;
+					out[i] += p->GetBuffer()[i];
 			}
 		}
 
 //		for(int i = 0; i < framesToFill; i++)
 //			out[i] /= 16;
 		for (int i = 0; i < framesToFill; i ++)
-			engine->_sampleData[(i + engine->_writeHead) % 44100] = out[i];
+			engine->_sampleData->at((i + engine->_writeHead) % (engine->_sampleRate * DEBUG_SECONDS * engine->_outputChannels)) = out[i];
 		engine->_writeHead += framesToFill;
 		return paContinue;
 	}
@@ -136,6 +146,7 @@ namespace MSQ
 		int err = Pa_StartStream(_stream);
 		if (err != paNoError)
 			Log::Instance()->Err(Pa_GetErrorText(err));
+
 	}
 	
 	void Engine::StopStream()
@@ -145,14 +156,14 @@ namespace MSQ
 			Log::Instance()->Err(Pa_GetErrorText(err));
 		SF_INFO info;
 		info.format = SF_FORMAT_WAV | SF_FORMAT_PCM_32;
-		info.frames = 44100/2;
-		info.samplerate = 44100;
-		info.channels = 2;
+		info.frames = DEBUG_SECONDS * _sampleRate;
+		info.samplerate = _sampleRate;
+		info.channels = _outputChannels;
 		info.seekable = false;
 		SNDFILE* sndfile = sf_open("debug.wav", SFM_WRITE, &info);
 		if (int err = sf_error(sndfile))
 			Log::Instance()->Err(sf_error_number(err));
-		sf_write_int(sndfile, &_sampleData[0], 44100);
+		sf_write_int(sndfile, &_sampleData->at(0), _sampleData->size());
 		if (int err = sf_error(sndfile))
 			Log::Instance()->Err(sf_error_number(err));
 		sf_close(sndfile);
