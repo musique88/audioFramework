@@ -14,6 +14,7 @@
 
 int main()
 {
+	srand(0);
 	if (!glfwInit())
 		return 1;
 	const char *glsl_version = "#version 130";
@@ -49,26 +50,20 @@ int main()
 	static MSQ::Engine* engine = MSQ::Engine::Instance();
 	engine->LogDevices();
 	engine->OpenStream(-1,12,2,48000,512);
-	MSQ::Sample s("Res/song.flac");
-	MSQ::GranularSynth sp;
-	sp.SetSample(&s);
-	engine->AddInstrument(&sp);
+
 	engine->StartStream();
-	sp.SetSpeed(0.f);
-	sp.SetPosition(400000);
-	sp.NoteOn(30,30);
 
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
-		glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
+		glClearColor(0.f, 0.f, 0.f, 1.00f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// feed inputs to dear imgui, start new frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-		sp.Render();
+		engine->Render();
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);

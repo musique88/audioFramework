@@ -31,14 +31,16 @@ namespace MSQ
 		public:
 			Voice(GranularSynth* parent, unsigned char note, unsigned char vel);
 			~Voice();
+			unsigned char GetNote() const;
 			void Play(int samples) override;
+			void Done();
 			bool GetDone();
 			int GetGrainCount();
 			const std::vector<Grain*>& GetGrains();
 			int GetTimer();
 		};
 
-		std::list<Voice> _voices;
+		std::vector<Voice*> _voices;
 		Sample* _sample;
 		Envelope::ADSRInfo _voiceEnv;
 		Envelope::AHRInfo _grainEnv;
@@ -50,6 +52,8 @@ namespace MSQ
 		float _randomPan;
 		float _randomPos;
 		float _grainVolume;
+
+		bool _selectingSample;
 
 	public:
 		GranularSynth();
@@ -67,7 +71,7 @@ namespace MSQ
 		void NoteOff(unsigned char note, unsigned char vel) override;
 		int GetPosition();
 		float GetSpeed();
-		void Render();
+		void Render() override;
 		void SetRandomPan(float);
 		void SetRandomPos(float);
 		float GetRandomPan();

@@ -1,12 +1,11 @@
 
-
 namespace MSQ::Util
 {
 	struct Stereo
 	{
-		int Right;
-		int Left;
+		float Right;
+		float Left;
 	};
 	
-	Stereo Pan(int right, int left, float pan);
+	Stereo Pan(float right, float left, float pan);
 }

@@ -5,6 +5,7 @@
 #include "InstrumentsUtils.hpp"
 #include <cstdlib>
 #include <ctime>
+#include <string>
 
 namespace MSQ
 {
@@ -14,6 +15,7 @@ namespace MSQ
 		_sampler.SetSample(sample);
 		_sampler.SetSpeed(speed);
 		_sampler.SetPosition(position);
+		_sampler.NoteOn(0,0);
 		_pan = pan;
 	}
 
@@ -21,7 +23,7 @@ namespace MSQ
 	{   
 		_sampler.Play(samples);
 		_envelope.Play(samples);
-		const int* samplerBuffer = _sampler.GetBuffer();
+		const float* samplerBuffer = _sampler.GetBuffer();
 		const float* envBuffer = _envelope.GetBuffer();
 
 		for(int i = 0; i < samples; i++)
@@ -46,6 +48,11 @@ namespace MSQ
 	GranularSynth::Voice::Voice(GranularSynth* parent, unsigned char note, unsigned char vel)
 	: Playable(2), _parent(parent), _envelope(parent->GetVoiceEnv()),_note(note), _vel(vel), _timer(0) {}
 
+	void GranularSynth::Voice::Done()
+	{
+		_envelope.Release();
+	}
+
 	void GranularSynth::Voice::Play(int samples)
 	{
 		int density = (float)Engine::Instance()->GetSampleRate()/_parent->GetDensity();
@@ -66,7 +73,7 @@ namespace MSQ
 			for(GranularSynth::Grain* g : _grains)
 			{
 				g->Play(lengthToEval);
-				const int* gBuffer = g->GetBuffer();
+				const float* gBuffer = g->GetBuffer();
 				for (int j = 0; j < lengthToEval; j++)
 					for(int k = 0; k < _outputChannels; k++)
 						_buffer[(i + j) * _outputChannels + k] += gBuffer[j * _outputChannels + k] * _parent->_grainVolume;
@@ -89,7 +96,7 @@ namespace MSQ
 		const float* envBuff = _envelope.GetBuffer();
 		for(int j = 0; j < samples; j++)
 			for(int k = 0; k < _outputChannels; k++)
-				_buffer[j * _outputChannels + k] = (int)(envBuff[j] * (float)_buffer[j * _outputChannels + k]);
+				_buffer[j * _outputChannels + k] = envBuff[j] * (float)_buffer[j * _outputChannels + k];
 		for(int j = 0; j < _grains.size(); j++)
 			if(_grains[j]->GetDone())
 				_grains.erase(_grains.begin() + j);
@@ -120,35 +127,45 @@ namespace MSQ
 		return _timer;
 	}
 
+	unsigned char GranularSynth::Voice::GetNote() const
+	{
+		return _note;
+	}
+
 	void GranularSynth::Play(int samples)
 	{
 		if(samples > _bufferSize)
 			return;
 		EmptyBuffer();
-		for(Voice& v : _voices)
+		for(Voice* v : _voices)
 		{
-			v.Play(samples);
-			const int* vBuffer = v.GetBuffer();
-			int vOutputChannels = v.GetOutputChannels();
+			v->Play(samples);
+			const float* vBuffer = v->GetBuffer();
+			int vOutputChannels = v->GetOutputChannels();
 			for(int i = 0; i < samples; i++)
 			 	for(int j = 0; j < vOutputChannels; j++)
 					_buffer[(i * vOutputChannels) + j] += vBuffer[(i * vOutputChannels) + j];
 		}
 
-		for(auto it = _voices.begin(); it != _voices.end(); it++)
-			if(it->GetDone())
-				_voices.erase(it);
+		for(int i = 0; i < _voices.size(); i++)
+			if (_voices[i]->GetDone())
+				_voices.erase(_voices.begin() + i);
 		_position += samples * _speed * _defaultGrainSpeed;
 	}
 
 	void GranularSynth::NoteOn(unsigned char note, unsigned char vel)
 	{
-		_voices.emplace_back(this, note, vel);
+		for (int i = 0; i < _voices.size(); i++)
+			if(_voices[i]->GetNote() == note)
+				return;
+		_voices.push_back(new Voice(this,note,vel));
 	}
 
 	void GranularSynth::NoteOff(unsigned char note, unsigned char vel)
 	{
-
+		for (int i = 0; i < _voices.size(); i++)
+			if(_voices[i]->GetNote() == note)
+				_voices[i]->Done();
 	}
 
 	Sample* GranularSynth::GetSample()
@@ -172,32 +189,12 @@ namespace MSQ
 		return _density;
 	}
 
-	GranularSynth::GranularSynth(Sample* sample)
-	: Instrument(2)
-	{
-		_position = 0.f;
-		_speed = 0.f;
-		_density = 0.5f;
-		_grainEnv.a = 10000;
-		_grainEnv.h = 10000;
-		_grainEnv.r = 10000;
-
-		_voiceEnv.a = 100;
-		_voiceEnv.d = 100;
-		_voiceEnv.s = 0.2f;
-		_voiceEnv.r = 100;
-		_randomPan = 0.f;
-		_grainVolume = 0.125f;
-
-		_sample = sample;
-		_defaultGrainSpeed = (float)sample->GetSampleRate() / (float)Engine::Instance()->GetSampleRate();
-		_grainSpeed = 1;
-	}
-
 	GranularSynth::GranularSynth()
 	: Instrument(2)
 	{
 		srand (static_cast <unsigned> (time(0)));
+
+		SetName("GranularSynth");
 		_position = 0.f;
 		_speed = 0.f;
 		_density = 0.5;
@@ -205,16 +202,18 @@ namespace MSQ
 		_grainEnv.h = 10000;
 		_grainEnv.r = 1000;
 
-		_voiceEnv.a = 100;
+		_voiceEnv.a = 100000;
 		_voiceEnv.d = 100;
-		_voiceEnv.s = 0.2f;
-		_voiceEnv.r = 100;
+		_voiceEnv.s = 1.f;
+		_voiceEnv.r = 100000;
 
 		_sample = nullptr;
 		_defaultGrainSpeed = 1.f;
 		_grainSpeed = 1;
 		_randomPan = 0.f;
+		_randomPos = 0.f;
 		_grainVolume = 0.125f;
+		_active = false;
 	}
 
 
@@ -241,7 +240,7 @@ namespace MSQ
 	void GranularSynth::SetSample(Sample* s)
 	{
 		_defaultGrainSpeed = (float)s->GetSampleRate() / (float)Engine::Instance()->GetSampleRate();
-
+		_active = true;
 		_sample = s;
 	}
 
@@ -262,10 +261,19 @@ namespace MSQ
 
 	void GranularSynth::Render()
 	{
-		bool v;
-		ImGui::Begin("GranularSynth");
-		ImGui::Text("%d", _voices.front().GetGrainCount());
-		ImGui::Text("%d", _voices.front().GetTimer());
+		ImGui::PushID(_id);
+		ImGui::Begin((std::string("GranularSynth##") + std::to_string(_id)).c_str());
+		ImGui::Text("%d", _voices.size());
+		if (_sample == nullptr)
+		{
+			_selectingSample = true;
+			goto end;
+		}
+		ImGui::Text("%s", _sample->GetFilePath());
+		ImGui::SameLine();
+		if (ImGui::Button("Change"))
+			_selectingSample = !_selectingSample;
+
 		ImGui::SliderInt("Position", &_position, 0, _sample->GetLength());
 		ImGui::SliderFloat("Speed", &_speed, -10, 10);
 		ImGui::SliderFloat("Grains per second", &_density, 0.1f, 100.f);
@@ -276,6 +284,25 @@ namespace MSQ
 		ImGui::SliderFloat("RandomPan", &_randomPan, 0.f, 1.f);
 		ImGui::SliderFloat("RandomPos", &_randomPos, 0.f, 1.f);
 		ImGui::SliderFloat("GrainVolume", &_grainVolume, 0.f, 0.125f);
+		if (_voices.size() > 0)
+			ImGui::Text("%d", _voices.front()->GetGrainCount());
+	end:
 		ImGui::End();
+
+		if (_selectingSample)
+		{
+			ImGui::Begin((std::string("Select Sample##") + std::to_string(_id)).c_str(), &_selectingSample);
+			const std::vector<Sample*> samples = Engine::Instance()->GetSamples();
+			for (int i = 0; i < samples.size(); i++)
+			{
+				ImGui::Text("%02d :: %s", i, samples[i]->GetFilePath());
+				ImGui::SameLine();
+				if (ImGui::Button((std::string("Select##") + std::to_string(i)).c_str()))
+					SetSample(samples[i]);
+			}
+			ImGui::End();
+		}
+
+		ImGui::PopID();
 	}
 }

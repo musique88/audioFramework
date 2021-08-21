@@ -4,8 +4,8 @@
 
 namespace MSQ::Util
 {
-	Stereo Pan(int left, int right, float pan)
+	Stereo Pan(float left, float right, float pan)
 	{
-		return {(int)(std::min(1.f, 1.f-pan) * left), (int)(std::min(1.f, 1.f+pan) * left)};
+		return {(std::min(1.f, 1.f-pan) * left),(std::min(1.f, 1.f+pan) * left)};
 	}
 }

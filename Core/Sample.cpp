@@ -5,14 +5,14 @@
 
 namespace MSQ
 {
-	Sample::Sample(const int& channels, const int* buffer, const int& bufferSize, int sampleRate)
+	Sample::Sample(const int& channels, const float* buffer, const int& bufferSize, int sampleRate)
 	:_channels(channels)
 	{
-		_buffer = std::vector<int>(buffer, buffer + bufferSize);
+		_buffer = std::vector<float>(buffer, buffer + bufferSize);
 		_sampleRate = sampleRate;
 	}
 
-	Sample::Sample(int channels, const std::vector<int> buffer, int sampleRate)
+	Sample::Sample(int channels, const std::vector<float> buffer, int sampleRate)
 	:Sample(channels, &buffer[0], buffer.size(), sampleRate) {}
 
 	const int Sample::GetChannels() const
@@ -25,7 +25,7 @@ namespace MSQ
 		return _buffer.size()/GetChannels();
 	}
 
-	const std::vector<int>& Sample::GetArray() const
+	const std::vector<float>& Sample::GetArray() const
 	{
 		return _buffer;
 	}
@@ -37,18 +37,24 @@ namespace MSQ
 		if(int i = sf_error(file))
 			Log::Instance()->Err(sf_error_number(i));
 		Log::Instance()->Warn((std::string("File is of ") + std::to_string(info.samplerate)) + std::string(" hz"));
-		int* arr = new int[info.frames * info.channels]; 
-		sf_count_t size = sf_read_int(file, arr, info.frames * info.channels);
+		float* arr = new float[info.frames * info.channels]; 
+		sf_count_t size = sf_read_float(file, arr, info.frames * info.channels);
 		if(int i = sf_error(file))
 			Log::Instance()->Err(sf_error_number(i));
 		_channels = info.channels;
-		_buffer = std::vector<int>(arr, arr + size);
+		_buffer = std::vector<float>(arr, arr + size);
 		_sampleRate = info.samplerate;
 		sf_close(file);
+		_path = fileName;
 	}
 
 	const int Sample::GetSampleRate() const
 	{ 
 		return _sampleRate;
+	}
+
+	const char* Sample::GetFilePath() const
+	{
+		return _path.c_str();
 	}
 }

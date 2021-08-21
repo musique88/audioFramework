@@ -94,7 +94,7 @@ namespace MSQ::Envelope
 					baseValue = _s;
 					break;
 				default:
-					return;
+					goto end;
 			}
 			deltaEnd = std::min(deltaEnd, samples - currentPosition);
 			for(int i = 0; i < deltaEnd; i++)
@@ -104,6 +104,7 @@ namespace MSQ::Envelope
 			if (state != 2)
 				state++;
 		}
+		end:
 		_timer += samples;
 	}
 
