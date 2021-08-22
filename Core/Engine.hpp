@@ -1,13 +1,15 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "../Playable/Playable.hpp"
+#include "../Playable/Instruments/Instrument.hpp"
+#include "Sample.hpp"
 #include <portaudio.h>
 #include <sndfile.h>
+#include "Renderable.hpp"
 
 namespace MSQ
 {
-	class Engine
+	class Engine : public Renderable
 	{
 		PaStream* _stream;
 		static Engine* _instance;
@@ -16,13 +18,20 @@ namespace MSQ
 					const PaStreamCallbackTimeInfo* timeInfo,
 					PaStreamCallbackFlags statusFlag,
 					void *userData);
-		std::vector<Playable*> _instruments;
+		std::vector<Instrument*> _instruments;
+		std::vector<Sample*> _samples;
 		Engine();
 		~Engine();
+		int _sampleRate;
 		int _outputChannels;
 		int _bufferSize;
-		std::vector<int> _sampleData;
+		std::vector<float>* _sampleData;
 		int _writeHead;
+		float* _buffer;
+
+		unsigned char _activeOctave;
+		bool _notes[128];
+		char _activeInstrument;
 	public:
 		static Engine* Instance();
 		void SetBufferSize(int bufferSize);
@@ -30,9 +39,13 @@ namespace MSQ
 		void OpenStream(int inIndex, int outIndex, int outChannels = 2, int sampleRate = 44100, int bufferLength = 512);
 		void StartStream();
 		void StopStream();
-		int GetBufferSize();
+		void AddSample(const char*);
+		const std::vector<Sample*>& GetSamples() const;
+		const int GetSampleRate() const;
+		const int GetBufferSize() const;
 		void Hang(int seconds);
 		void Hang();
-		void AddInstrument(Playable* p);
+		void AddInstrument(Instrument* p);
+		void Render() override;
 	};
 }

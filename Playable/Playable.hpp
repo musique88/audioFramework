@@ -1,22 +1,29 @@
 #pragma once
+#include "../Core/Renderable.hpp"
+#include <string>
 
 namespace MSQ
 {
-	class Playable
+	class Playable : public Renderable
 	{
 	protected:
-		int* _buffer;
+		float* _buffer;
 		int _bufferSize;
 		int _outputChannels;
 		bool _active;
+		std::string _name;
+
 	public:
 		Playable(int outputChannels);
 		virtual ~Playable();
 		virtual void Play(int samples) = 0;
 		void EmptyBuffer();
-		const int* const & GetBuffer() const;
+
+		void SetName(const char* name);
+		const std::string GetName() const;
+		const float* const & GetBuffer() const;
 		const int& GetBufferSize() const;
 		const int& GetOutputChannels() const;
-		const bool& GetActive() const;
+		bool& GetActive();
 	};
 }

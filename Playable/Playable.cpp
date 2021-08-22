@@ -8,7 +8,8 @@ namespace MSQ
 		_bufferSize = Engine::Instance()->GetBufferSize();
 		_outputChannels = outputChannels;
 		_active = true;
-		_buffer = new int[_bufferSize * outputChannels];
+		_buffer = new float[_bufferSize * outputChannels];
+		_name = "Placeholder Playable";
 	}
 
 	Playable::~Playable()
@@ -16,7 +17,17 @@ namespace MSQ
 		delete _buffer;
 	}
 
-	const int* const & Playable::GetBuffer() const
+	void Playable::SetName(const char* s)
+	{
+		_name = s;
+	}
+
+	const std::string Playable::GetName() const
+	{
+		return _name;
+	}
+
+	const float* const & Playable::GetBuffer() const
 	{
 		return _buffer;
 	}
@@ -38,7 +49,7 @@ namespace MSQ
 			_buffer[i] = 0;
 	}
 
-	const bool& Playable::GetActive() const
+	bool& Playable::GetActive()
 	{
 		return _active;
 	}

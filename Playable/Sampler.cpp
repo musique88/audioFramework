@@ -1,10 +1,11 @@
 #include "Sampler.hpp"
 #include <algorithm>
+#include "../Core/Log.hpp"
 
 namespace MSQ
 {
 	Sampler::Sampler(int outputChannels)
-	:Playable(outputChannels)
+	:Instrument(outputChannels)
 	{
 		_speed = 1.f;
 		_sample = nullptr;
@@ -49,17 +50,15 @@ namespace MSQ
 
 	void Sampler::Play(int samples)
 	{
-		if(samples > _bufferSize)
+		EmptyBuffer();
+		if(samples > _bufferSize || _notesOn <= 0)
 			return;
 		
-		const std::vector<int>& sampleArray = _sample->GetArray();
+		const std::vector<float>& sampleArray = _sample->GetArray();
 		int positionInArray = _position * _outputChannels;
 		int remainingSamples = samples;
-		if (_sample->GetLength() < samples + _position)
-		{
-			remainingSamples = _sample->GetLength() - _position;
-			_active = false;
-		}
+		remainingSamples = std::max(0, remainingSamples);
+		MSQ::Log::Instance()->Info(std::to_string(remainingSamples));
 
 		for(int i = 0; i < remainingSamples; i++)
 			for(int j = 0; j < _outputChannels; j++)
@@ -73,5 +72,15 @@ namespace MSQ
 	void Sampler::SetSpeed(float s)
 	{
 		_speed = s;
+	}
+	
+	void Sampler::NoteOn(unsigned char note, unsigned char vel)
+	{
+		_notesOn ++;
+	}
+
+	void Sampler::NoteOff(unsigned char note, unsigned char vel)
+	{
+		_notesOn --;
 	}
 }
