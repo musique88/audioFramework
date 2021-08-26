@@ -14,7 +14,8 @@ add_executable(	AudioFramework
 				Core/Log.cpp
 				Core/Sample.cpp
 				Playable/Playable.cpp
-				Playable/Sampler.cpp
+				Playable/Instruments/Sampler.cpp
+				Playable/Instruments/LoopingSampler.cpp
 				Playable/Instruments/Instrument.cpp
 				Playable/Instruments/Envelope.cpp
 				Playable/Instruments/GranularSynth.cpp

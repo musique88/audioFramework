@@ -229,6 +229,10 @@ namespace MSQ
 				{
 					AddInstrument(new GranularSynth());
 				}
+				if (ImGui::MenuItem("Sampler")) 
+				{
+					AddInstrument(new Sampler(2));
+				}
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenuBar();

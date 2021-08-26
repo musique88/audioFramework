@@ -2,7 +2,7 @@
 
 #include "Instrument.hpp"
 #include "Envelope.hpp"
-#include "../Sampler.hpp"
+#include "LoopingSampler.hpp"
 #include <list>
 
 namespace MSQ
@@ -12,7 +12,7 @@ namespace MSQ
 		class Grain : public Playable
 		{
 			Envelope::AHR _envelope;
-			Sampler _sampler;
+			LoopingSampler _sampler;
 			float _pan;
 		public:
 			Grain(Envelope::AHRInfo env, Sample* sample, int position,float speed, float pan = 0);

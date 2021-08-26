@@ -150,7 +150,7 @@ namespace MSQ
 		for(int i = 0; i < _voices.size(); i++)
 			if (_voices[i]->GetDone())
 				_voices.erase(_voices.begin() + i);
-		_position += samples * _speed * _defaultGrainSpeed;
+		SetPosition(_position + samples * _speed * _defaultGrainSpeed);
 	}
 
 	void GranularSynth::NoteOn(unsigned char note, unsigned char vel)
@@ -251,7 +251,10 @@ namespace MSQ
 
 	void GranularSynth::SetPosition(int p)
 	{
-		_position = p;
+		if (p < 0)
+			_position += _sample->GetLength();
+		else
+			_position = p % _sample->GetLength();
 	}
 
 	float GranularSynth::GetSpeed()
@@ -297,8 +300,10 @@ namespace MSQ
 			{
 				ImGui::Text("%02d :: %s", i, samples[i]->GetFilePath());
 				ImGui::SameLine();
-				if (ImGui::Button((std::string("Select##") + std::to_string(i)).c_str()))
+				if (ImGui::Button((std::string("Select##") + std::to_string(i)).c_str())){
 					SetSample(samples[i]);
+					_selectingSample = false;
+				}
 			}
 			ImGui::End();
 		}

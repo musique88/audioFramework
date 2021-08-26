@@ -1,6 +1,6 @@
 #include "Core/Log.hpp"
 #include "Core/Sample.hpp"
-#include "Playable/Sampler.hpp"
+#include "Playable/Instruments/LoopingSampler.hpp"
 #include "Core/Engine.hpp"
 #include "Playable/Instruments/GranularSynth.hpp"
 #include <iostream>
@@ -50,8 +50,14 @@ int main()
 	static MSQ::Engine* engine = MSQ::Engine::Instance();
 	engine->LogDevices();
 	engine->OpenStream(-1,12,2,48000,512);
-
+	engine->AddSample("Res/song.flac");
+	MSQ::GranularSynth s;
+	engine->AddInstrument(&s);
 	engine->StartStream();
+	s.SetSample(engine->GetSamples()[0]);
+	s.SetSpeed(-2.f);
+	s.SetPosition(3e10);
+	s.NoteOn(30,30);
 
 	while (!glfwWindowShouldClose(window))
 	{

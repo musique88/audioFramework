@@ -1,6 +1,7 @@
 #include "Sampler.hpp"
 #include <algorithm>
 #include "../Core/Log.hpp"
+#include "../Core/Engine.hpp"
 
 namespace MSQ
 {
@@ -10,6 +11,8 @@ namespace MSQ
 		_speed = 1.f;
 		_sample = nullptr;
 		_position = 0;
+		_selectingSample = true;
+		_name = "Sampler";
 	}
 
 	const bool Sampler::IsEmpty() const
@@ -58,7 +61,6 @@ namespace MSQ
 		int positionInArray = _position * _outputChannels;
 		int remainingSamples = samples;
 		remainingSamples = std::max(0, remainingSamples);
-		MSQ::Log::Instance()->Info(std::to_string(remainingSamples));
 
 		for(int i = 0; i < remainingSamples; i++)
 			for(int j = 0; j < _outputChannels; j++)
@@ -66,7 +68,7 @@ namespace MSQ
 		for(int i = remainingSamples; i < samples - remainingSamples; i++)
 			for(int j = 0; j < _outputChannels; j++)
 				_buffer[i * _outputChannels + j] = 0;
-		_position += samples * _speed;
+		SetPosition(_position + samples * _speed);
 	}
 
 	void Sampler::SetSpeed(float s)
@@ -82,5 +84,42 @@ namespace MSQ
 	void Sampler::NoteOff(unsigned char note, unsigned char vel)
 	{
 		_notesOn --;
+	}
+
+	void Sampler::Render()
+	{
+		ImGui::PushID(_id);
+		ImGui::Begin((std::string("Sampler##") + std::to_string(_id)).c_str());
+		if (_sample == nullptr)
+		{
+			_selectingSample = true;
+			goto end;
+		}
+		ImGui::Text("%s", _sample->GetFilePath());
+		if (ImGui::SliderInt("Position", &_position, 0, _sample->GetLength()))
+			SetPosition(_position);
+		ImGui::SliderFloat("Speed", &_speed, -10, 10);
+		ImGui::Text("%d", _notesOn);
+	end:
+		ImGui::End();
+
+		if (_selectingSample)
+		{
+			ImGui::Begin((std::string("Select Sample##") + std::to_string(_id)).c_str(), &_selectingSample);
+			const std::vector<Sample*> samples = Engine::Instance()->GetSamples();
+			for (int i = 0; i < samples.size(); i++)
+			{
+				ImGui::Text("%02d :: %s", i, samples[i]->GetFilePath());
+				ImGui::SameLine();
+				if (ImGui::Button((std::string("Select##") + std::to_string(i)).c_str()))
+				{
+					SetSample(samples[i]);
+					_selectingSample = false;
+				}
+			}
+			ImGui::End();
+		}
+
+		ImGui::PopID();
 	}
 }
